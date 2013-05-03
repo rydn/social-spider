@@ -6,7 +6,7 @@ var login = function() {
         });
     }
 
-var postback = function(response) {
+var getMutualFriends = function(response) {
         $.ajax({
             url: '/fb/init',
             type: 'POST',
@@ -23,16 +23,14 @@ var postback = function(response) {
 function postLogin() {
     FB.getLoginStatus(function(response) {
         if (response.status === 'connected') {
-            console.log(response);
-            postback(response);
+            $('.connection-status').html('Connected');
+
         } else if (response.status === 'not_authorized') {
+            $('.connection-status').html('Not Authorized');
             response = login();
-            console.log(response);
-            postback(response);
         } else {
+            $('.connection-status').html('Please login first');
             response = login();
-            console.log(response);
-            postback(response);
         }
     });
 }
