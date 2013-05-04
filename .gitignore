@@ -3,3 +3,4 @@ node_modules
 .zip
 .tar.gz
 public/javascripts/thirdparty
+dump.rdb
