@@ -2,4 +2,4 @@ node_modules
 .log
 .zip
 .tar.gz
-
+public/javascripts/thirdparty

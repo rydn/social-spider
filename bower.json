@@ -1,0 +1,15 @@
+{
+  "name": "SocialSpider",
+  "version": "0.0.1",
+  "main": "public/javascripts/app.js",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "components"
+  ],
+  "dependencies": {
+    "sammy": "~0.7.4",
+    "jquery": "~2.0.0",
+    "requirejs": "~2.1.5"
+  }
+}
