@@ -1,4 +1,4 @@
-require(['javascripts/thirdparty/jquery/jquery.js', 'javascripts/thirdparty/sammy/lib/sammy.js', 'socket.io/socket.io.js'], function (jQuery, Sammy, io) {
+requirejs(['javascripts/thirdparty/jquery/jquery.js', 'javascripts/thirdparty/sammy/lib/sammy.js', 'socket.io/socket.io.js'], function (jQuery, Sammy, io) {
 	//	internal app instance for exporting vars out of namespace
 	var _app = Object;
 	//	do facebook login
