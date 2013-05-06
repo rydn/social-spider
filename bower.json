@@ -10,6 +10,7 @@
   "dependencies": {
     "sammy": "~0.7.4",
     "jquery": "~2.0.0",
-    "requirejs": "~2.1.5"
+    "requirejs": "~2.1.5",
+    "moment": "~2.0.0"
   }
 }

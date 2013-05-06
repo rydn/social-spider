@@ -5,10 +5,13 @@ var express = require('express'),
     routes = require('./routes'),
     http = require('http'),
     jobQueue = require('./lib/queue.js'),
+    Job = require('./models/Jobs.js'),
+    mongoose = require('mongoose'),
     path = require('path');
+mongoose.connect('mongodb://localhost/social_spider');
 var app = express();
 //  configuration
-app.configure(function() {
+app.configure(function () {
     app.set('port', process.env.PORT || 5599);
     app.set('views', __dirname + '/views');
     app.set('view engine', 'jshtml');
@@ -21,7 +24,7 @@ app.configure(function() {
     app.use(app.router);
     app.use(express.static(path.join(__dirname, 'public')));
 });
-app.configure('development', function() {
+app.configure('development', function () {
     app.use(express.errorHandler());
 });
 app.engine('jshtml', require('jshtml-express'));
@@ -30,13 +33,13 @@ app.set('view engine', 'jshtml');
 //  Paths //
 ////////////
 app.get('/', routes.index);
-app.get('/models/:modelName', function(req, res) {
-    var modelName = req.params.modelName;
-    console.log(modelName);
-});
+// get friends from userid
+app.get('/api/:me/getFriends', routes.getFriends);
+//  get shared friends from a friend
+app.get('/api/:me/mutualfriends/:fid', routes.getMutualFriends);
 //  start web server
 var webserver = http.createServer(app)
-    .listen(app.get('port'), function() {
+    .listen(app.get('port'), function () {
     console.log("Express server listening on port " + app.get('port'));
     jobQueue.startInterface('Social-Spider | Queue', 5598);
     console.log('Kue interface listening on port 5598');
@@ -44,42 +47,84 @@ var webserver = http.createServer(app)
 //  start websocket server
 var io = require('socket.io')
     .listen(webserver);
-io.sockets.on('connection', function(socket) {
+io.sockets.on('connection', function (socket) {
     console.log('New connected client');
     /*
     socket events
     */
     //  on client auth with facebook
-    socket.on('fb.response', function(response) {
+    socket.on('fb.response', function (response) {
         console.log('New facebook user connected, userid: ' + response.authResponse.userID + ' status: ' + response.status);
     });
     //  initiate collecting mutual friends
-    socket.on('fb.friendsCollect', function(details) {
+    socket.on('fb.friendsCollect', function (details) {
         console.log('Collecting friends for: ' + details.userid);
         if (details.access_token) {
             jobQueue.enqueue('getFriends', {
                 access_token: details.access_token,
                 userid: details.userid
-            }, function(err, job) {
+            }, function (err, job) {
                 if (!err) {
-                    socket.emit('fb.friendsCollect.start', job);
+                    var currentJob = new Job({
+                        type: 'getFriends',
+                        jobID: job.data.jobID,
+                        started: new Date()
+                            .getTime(),
+                        ended: null,
+                        status: 'Queued',
+                        data: {
+                            access_token: job.data.access_token,
+                            userid: job.data.userid
+                        }
+                    });
+                    currentJob.save(function (err) {
+                        if (err) socket.emit('fb.friendsCollect.failed', {
+                            job: job,
+                            timestamp: new Date()
+                                .getTime(),
+                            err: err
+                        });
+                        else socket.emit('fb.friendsCollect.start', job);
+                    });
                     // bind event handlers
-                    job.on('complete', function() {
-                        console.log("Job: 'getFriends', is complete");
-                        socket.emit('fb.friendsCollect.complete', {
-                            job: job,
-                            timestamp: new Date()
-                                .getTime()
+                    job.on('complete', function () {
+                        currentJob.status = 'complete';
+                        currentJob.ended = new Date()
+                            .getTime();
+                        currentJob.save(function (err) {
+                            if (err) console.log(err);
+                            else {
+                                var timetaken = currentJob.ended - currentJob.started;
+                                console.log("Job: task: 'getFriends', jobID: '" + currentJob.jobID + "', completed in: " + timetaken);
+                                socket.emit('fb.friendsCollect.complete', {
+                                    job: job,
+                                    time: {
+                                        started: currentJob.started,
+                                        ended: currentJob.ended
+                                    },
+                                    timestamp: new Date()
+                                        .getTime()
+                                });
+                            }
                         });
                     })
-                        .on('failed', function() {
-                        socket.emit('fb.friendsCollect.failed', {
-                            job: job,
-                            timestamp: new Date()
-                                .getTime()
+                        .on('failed', function () {
+                        currentJob.status = 'failed';
+                        currentJob.ended = new Date()
+                            .getTime();
+                        currentJob.save(function (err) {
+                            socket.emit('fb.friendsCollect.failed', {
+                                job: job,
+                                timestamp: new Date()
+                                    .getTime()
+                            });
                         });
                     })
-                        .on('progress', function(progress) {
+                        .on('progress', function (progress) {
+                        if (currentJob.status !== 'processing') {
+                            currentJob.status = 'processing';
+                            currentJob.save();
+                        }
                         process.stdout.write('\r  job #' + job.id + ' ' + progress + '% complete');
                         socket.emit('fb.friendsCollect.progress', {
                             job: job,
@@ -101,7 +146,7 @@ io.sockets.on('connection', function(socket) {
         });
     });
     //  on client disconnect
-    socket.on('disconnect', function() {
+    socket.on('disconnect', function () {
         console.log('Client disconnect.');
     });
 });

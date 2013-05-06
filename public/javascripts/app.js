@@ -1,4 +1,4 @@
-requirejs(['javascripts/thirdparty/jquery/jquery.js', 'javascripts/thirdparty/sammy/lib/sammy.js', 'socket.io/socket.io.js'], function(jQuery, Sammy, io) {
+requirejs(['javascripts/thirdparty/jquery/jquery.js', 'javascripts/thirdparty/sammy/lib/sammy.js', 'javascripts/thirdparty/moment/moment.js', 'socket.io/socket.io.js'], function(jQuery, Sammy, moment,  io) {
 	//	internal app instance for exporting vars out of namespace
 	var _app = Object;
 	//	do facebook login
@@ -52,6 +52,7 @@ requirejs(['javascripts/thirdparty/jquery/jquery.js', 'javascripts/thirdparty/sa
 				this.log('facebook logged in');
 				postLogin(function(response) {
 					window.location = '#/home';
+					window.userid = response.userid;
 					getMutualFriends(response);
 				});
 			});
@@ -94,14 +95,21 @@ requirejs(['javascripts/thirdparty/jquery/jquery.js', 'javascripts/thirdparty/sa
 		});
 		//	Facebook events
 		window.socket.on('fb.friendsCollect.start', function(job) {
+			console.log(job);
+			$('.log').append('<div>Job added to work queue, jobID: '+ job.data.jobID);
 			$('.log')
-				.append('<div>Job Added to Queue</div><span class="percentDone">0%</span> Complete');
+				.append('<span class="percentDone">0%</span> Complete');
 		});
 		window.socket.on('fb.friendsCollect.progress', function(jobProgress) {
 			$('.percentDone').html(jobProgress.progress + '%');
 		});
 		window.socket.on('fb.friendsCollect.complete', function(job) {
-			$('.log').append('<div>Job completed</div>' + JSON.stringify(job));
+			var timeTaken = job.time.ended - job.time.started;
+			$('.log').append('<div>Job completed, timetaken: '+timeTaken+'</div>' + JSON.stringify(job));
+			$('.log').append('<div>Getting friends</div>');
+			$.ajax({url:'/api/'+job.data.userID+'/getFriends', type:'get', async:false, cache:false, success:function(friends){
+				console.log(friends);
+			}});
 		});
 	};
 	// Load the FB SDK asynchronously
