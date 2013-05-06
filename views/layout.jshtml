@@ -40,29 +40,31 @@
                     <div id="fb-root">
                     </div>
                     <script>
+                                        
                     </script>
                     <div class="content">
                         <div class="row">
                             <div class="status">
                                 <span class="connection-status">
-                                    Not Connected
+                                    Facebook Not Connected
+                                </span>
+                                <span class="socket-connection-status">
+                                    Facebook Not Connected
                                 </span>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="log"></div>
+                        </div>
                     </div>
                     <script src="/javascripts/thirdparty/requirejs/require.js" type="text/javascript">
+                                        
                     </script>
+        <script type="text/javascript">
+            require(['javascripts/app'], function(app) {    
+                //  app loaded
+            });
+        </script>
+    </body>
 
-    <script type="text/javascript">
-
-        require(['javascripts/app'], function(app) {
-          
-          //  app loaded
-          
-          
-          
-        });
-    </script>
-  </body>
-                
 </html>

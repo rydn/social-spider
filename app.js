@@ -34,39 +34,6 @@ app.get('/models/:modelName', function (req, res) {
     var modelName = req.params.modelName;
     console.log(modelName);
 });
-//  post auth get details
-app.post('/fb/init', function (req, res) {
-    if (req.body.access_token) {
-        jobQueue.enqueue('getFriends', {
-            access_token: req.body.access_token,
-            userid: req.body.userid
-        }, function (err, job) {
-            if (!err) {
-                // bind event handlers
-                job.on('complete', function () {
-                    console.log("Job: 'getFriends', is complete");
-                    res.json();
-                })
-                    .on('failed', function () {
-                    console.log("Job: 'getFriends', failed");
-                })
-                    .on('progress', function (progress) {
-                    process.stdout.write('\r  job #' + job.id + ' ' + progress + '% complete');
-                });
-                // process job
-                jobQueue.processQueue('getFriends');
-            } else res.json({
-                hasErr: true,
-                err: 'failed to enqueue job'
-            });
-        });
-    } else {
-        res.json({
-            hasErr: true,
-            err: 'No access token provided'
-        })
-    }
-});
 //  start web server
 var webserver = http.createServer(app)
     .listen(app.get('port'), function () {
@@ -82,6 +49,57 @@ io.sockets.on('connection', function (socket) {
     /*
     socket events
     */
+    //  on client auth with facebook
+    socket.on('fb.response', function (response) {
+        console.log('New facebook user connected, userid: ' + response.authResponse.userID + ' status: ' + response.status);
+    });
+    //  initiate collecting mutual friends
+    socket.on('fb.friendsCollect', function (details) {
+        console.log('Collecting friends for: '+details.userid);
+        if (details.access_token) {
+            jobQueue.enqueue('getFriends', {
+                access_token: details.access_token,
+                userid: details.userid
+            }, function (err, job) {
+                if (!err) {
+                    socket.emit('fb.friendsCollect.start', job);
+                    // bind event handlers
+                    job.on('complete', function () {
+                        console.log("Job: 'getFriends', is complete");
+                        socket.emit('fb.friendsCollect.complete', {
+                            job: job,
+                            timestamp: new Date()
+                                .getTime()
+                        });
+                    })
+                        .on('failed', function () {
+                        socket.emit('fb.friendsCollect.failed', {
+                            job: job,
+                            timestamp: new Date()
+                                .getTime()
+                        });
+                    })
+                        .on('progress', function (progress) {
+                        process.stdout.write('\r  job #' + job.id + ' ' + progress + '% complete');
+                        socket.emit('fb.friendsCollect.progress', {
+                            job: job,
+                            timestamp: new Date()
+                                .getTime(),
+                            progress: progress
+                        });
+                    });
+                    // process job
+                    jobQueue.processQueue('getFriends');
+                } else socket.emit('fb.friendsCollect.failed', {
+                    hasErr: true,
+                    err: 'failed to enqueue job'
+                });
+            });
+        } else socket.emit('fb.friendsCollect.failed', {
+            hasErr: true,
+            err: 'No access token provided'
+        });
+    });
     //  on client disconnect
     socket.on('disconnect', function () {
         console.log('Client disconnect.');
