@@ -10,7 +10,7 @@ module.exports = function (req, res) {
 				hasErr: true,
 				err: err
 			});
-			else res.json(mutualFriends);
+			else res.json(mutualFriends[0].mutualfriends);
 		});
 	} else {
 		res.json({

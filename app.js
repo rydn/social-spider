@@ -34,9 +34,11 @@ app.set('view engine', 'jshtml');
 ////////////
 app.get('/', routes.index);
 // get friends from userid
-app.get('/api/:me/getFriends', routes.getFriends);
+app.get('/api/:me/friends', routes.getFriends);
 //  get shared friends from a friend
 app.get('/api/:me/mutualfriends/:fid', routes.getMutualFriends);
+//  get data formatted for graph
+app.get('/api/:me/graphdata', routes.getGraphData);
 //  start web server
 var webserver = http.createServer(app)
     .listen(app.get('port'), function () {
@@ -47,6 +49,17 @@ var webserver = http.createServer(app)
 //  start websocket server
 var io = require('socket.io')
     .listen(webserver);
+//  configure websockets
+io.enable('browser client minification'); // send minified client
+io.enable('browser client etag'); // apply etag caching logic based on version number
+io.enable('browser client gzip'); // gzip the file
+io.set('log level', 1); // reduce logging
+// enable all transports (optional if you want flashsocket support, please note that some hosting
+// providers do not allow you to create servers that listen on a port different than 80 or their
+// default port)
+io.set('transports', [
+    'websocket', 'flashsocket', 'htmlfile', 'xhr-polling', 'jsonp-polling']);
+//  on new client connection
 io.sockets.on('connection', function (socket) {
     console.log('New connected client');
     /*

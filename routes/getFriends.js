@@ -9,7 +9,7 @@
 					hasErr: true,
 					err: err
 				});
-				else res.json(friends);
+				else res.json(friends[0].friends);
 			});
 		} else {
 			res.json({

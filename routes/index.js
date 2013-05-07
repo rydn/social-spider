@@ -8,3 +8,4 @@ exports.index = function (req, res) {
 };
 exports.getFriends = require('./getFriends.js');
 exports.getMutualFriends = require('./getMutualFriends.js');
+exports.getGraphData = require('./getGraphData.js');
