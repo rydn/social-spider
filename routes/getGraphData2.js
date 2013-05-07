@@ -15,37 +15,19 @@ module.exports = function(req, res) {
 				var friendsCollect = [];
 				var graphDataMutual = [];
 				_.each(friends[0].friends, function(friend, findex, fcontext) {
-					friendsCollect.push({
-						index: findex,
-						id: Number(friend.id),
-						name: friend.name,
-						type: 'friend',
-						hlink: 'http://www.facebook.com/' + friend.id,
-						weight:0
-					});
 					MutualFriends.find({
 						me: req.params.me,
 						fid: friend.id
 					}, function(err, sharedFriends) {
-						var count = 0;
-						var returnMap = _.map(sharedFriends[0].mutualfriends, function(mutualfriend) {
-							count++;
-							return {
-								index: count,
-								source:friend,
-								target: mutualfriend,
-								linkName: 'facebook friend',
-								sourceId: friend.id,
-								targetId: mutualfriend.id
-							};
+						sharedFriends = sharedFriends[0];
+						friendsCollect.push({
+							id: friend.id,
+							name: friend.name,
+							mutualfriends: sharedFriends.mutualfriends,
+							type: friend
 						});
-						graphDataMutual.push(returnMap[0]);
 						if ((findex + 1) >= fcontext.length) {
-							console.log('nodes: ' + friendsCollect.length, 'links: ' + graphDataMutual.length);
-							res.json({
-								links: friendsCollect,
-								nodes: graphDataMutual
-							});
+							res.json({nodes:friendsCollect});
 						}
 					});
 				});
