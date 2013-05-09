@@ -21,7 +21,7 @@ module.exports = function(req, res) {
 						name: friend.name,
 						type: 'friend',
 						hlink: 'http://www.facebook.com/' + friend.id,
-						weight:0
+						weight: 0
 					});
 					MutualFriends.find({
 						me: req.params.me,
@@ -32,7 +32,7 @@ module.exports = function(req, res) {
 							count++;
 							return {
 								index: count,
-								source:friend,
+								source: friend,
 								target: mutualfriend,
 								linkName: 'facebook friend',
 								sourceId: friend.id,

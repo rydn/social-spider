@@ -149,13 +149,13 @@ QuarkDG.importanceBuilder = function(graph) {
 		}
 	};
 };
-/*global $ QuarkDG Viva*/
+/*global $ QuarkDG Q_DirectedGraph*/
 QuarkDG.facebookGraphBuilder = function(graph, FB) {
 	// 70*70 /5000 - the nearest to undocumented limit of records returned in one request. 
 	var MAX_CHUNK = 70,
 		potentialConnections = 0,
 		currentUserId = parseInt(FB.getUserID(), 10),
-		random = Viva.random('I Love U *'),
+		random = Q_DirectedGraph.random('I Love U *'),
 		/**
 		 * Function converts array to array of arrays with max size of a subarray equal to maxChunkSize
 		 */
@@ -291,22 +291,22 @@ QuarkDG.facebookGraphBuilder = function(graph, FB) {
 		}
 	};
 };
-/*global Viva */
-Viva.Graph.View.webglDualColorLine = function(start, end) {
+/*global Q_DirectedGraph */
+Q_DirectedGraph.Graph.View.webglDualColorLine = function(start, end) {
 	return {
 		/**
 		 * Gets or sets color of the line. If you set this property externally
 		 * make sure it always come as integer of 0xRRGGBB format (no alpha channel);
 		 */
-		start: Viva.Graph.View._webglUtil.parseColor(start),
-		end: Viva.Graph.View._webglUtil.parseColor(end)
+		start: Q_DirectedGraph.Graph.View._webglUtil.parseColor(start),
+		end: Q_DirectedGraph.Graph.View._webglUtil.parseColor(end)
 	};
 };
-/* global Viva Float32Array ArrayBuffer */
+/* global Q_DirectedGraph Float32Array ArrayBuffer */
 /**
  * Defines UI for links in webgl renderer.
  */
-Viva.Graph.View.webglDualColorLinkProgram = function() {
+Q_DirectedGraph.Graph.View.webglDualColorLinkProgram = function() {
 	var ATTRIBUTES_PER_PRIMITIVE = 6, // primitive is Line with two points. Each has x,y and color = 3 * 2 attributes.
 		BYTES_PER_LINK = 2 * (Float32Array.BYTES_PER_ELEMENT * 2 + Uint32Array.BYTES_PER_ELEMENT), // 2 nodes * (x, y, rgba) 
 		linksFS = [
@@ -354,7 +354,7 @@ Viva.Graph.View.webglDualColorLinkProgram = function() {
 			gl = glContext;
 			gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 			gl.enable(gl.BLEND);
-			utils = Viva.Graph.webgl(glContext);
+			utils = Q_DirectedGraph.Graph.webgl(glContext);
 			program = utils.createProgram(linksVS, linksFS);
 			gl.useProgram(program);
 			locations = utils.getLocations(program, ['a_vertexPos', 'a_color', 'u_screenSize', 'u_transform']);
@@ -422,11 +422,11 @@ Viva.Graph.View.webglDualColorLinkProgram = function() {
 		}
 	};
 };
-/* global Viva Float32Array */
+/* global Q_DirectedGraph Float32Array */
 /**
  * Defines simple UI for nodes in webgl renderer. Each node is rendered as square. Color and size can be changed.
  */
-Viva.Graph.View.webglCustomNodeProgram = function() {
+Q_DirectedGraph.Graph.View.webglCustomNodeProgram = function() {
 	var ATTRIBUTES_PER_PRIMITIVE = 4, // Primitive is point, x, y - its coordinates + color and size == 4 attributes per node. 
 		nodesFS = [
 			'precision mediump float;',
@@ -470,7 +470,7 @@ Viva.Graph.View.webglCustomNodeProgram = function() {
 	return {
 		load: function(glContext) {
 			gl = glContext;
-			utils = Viva.Graph.webgl(glContext);
+			utils = Q_DirectedGraph.Graph.webgl(glContext);
 			program = utils.createProgram(nodesVS, nodesFS);
 			gl.useProgram(program);
 			locations = utils.getLocations(program, ['a_vertexPos', 'a_customAttributes', 'u_screenSize', 'u_transform']);
@@ -530,7 +530,7 @@ Viva.Graph.View.webglCustomNodeProgram = function() {
 };
 
 function main(FB) {
-	var graph = Viva.Graph.graph(),
+	var graph = Q_DirectedGraph.Graph.graph(),
 		fbBuilder = QuarkDG.facebookGraphBuilder(graph, FB),
 		progress = fbBuilder.buildMyFriendsGraph(),
 		currentUser = parseInt(FB.getUserID(), 10),
@@ -548,13 +548,15 @@ function main(FB) {
 		'#2A33D5',
 		'#802466',
 		'#899000'];
-	var graphics = Viva.Graph.View.webglGraphics(),
+	var graphics = Q_DirectedGraph.Graph.View.webglGraphics(),
 		progressChange = function(message) {
 			var isDone = progress.isCompleted(),
 				isError = isDone && message; // Succesful done has no message.
 			if (isError) {
 				$('#log').addClass('error').text(message);
 			} else if (isDone) {
+				
+
 				var maxDegree = graph.getNodesCount();
 				$('#log').text('Showing ' + maxDegree + ' friends').fadeOut(9000);
 				graph.forEachLink(function(link) {
@@ -598,7 +600,9 @@ function main(FB) {
 			hoveredName.empty().text(node.data.name).append(img).show();
 		},
 		hideQuickPreview = function() {
-			$('#hoveredName').hide().empty();
+			setTimeout(function() {
+				$('#hoveredName').hide().empty();
+			}, 1500);
 		},
 		hideDetails = function() {
 			$('#detailedInfo').hide();
@@ -649,28 +653,6 @@ function main(FB) {
 				} else {
 					actionLink.hide().after('<div id="request_sent_info">Friend request sent</div>');
 				}
-			} else if (!person.is_app_user) {
-				if (!node.appRequestSent) {
-					actionLink.text('Invite to QuarkDG')
-						.show()
-						.unbind('click')
-						.click(function() {
-						FB.ui({
-							method: 'apprequests',
-							message: 'This app shows web of your Facebook friends.',
-							to: node.id
-						},
-
-						function(r) {
-							if (r && r.action === true) {
-								actionLink.hide().after('<div id="request_sent_info">App request sent</div>');
-								node.appRequestSent = true;
-							}
-						});
-					});
-				} else {
-					actionLink.hide().after('<div id="request_sent_info">App request sent</div>');
-				}
 			}
 			$('#removeFromVisualization', details)
 				.unbind('click')
@@ -689,8 +671,8 @@ function main(FB) {
 		},
 		setSvgGraphics = function(graphics) {
 			graphics.node(function(node) {
-				var ui = Viva.Graph.svg('g'),
-					img = Viva.Graph.svg('image').attr('width', 64).attr('height', 64).link(node.data.pic_square);
+				var ui = Q_DirectedGraph.Graph.svg('g'),
+					img = Q_DirectedGraph.Graph.svg('image').attr('width', 64).attr('height', 64).link(node.data.pic_square);
 				ui.append(img);
 				$(ui).hover(function() {
 					showQuickPreview(node);
@@ -727,7 +709,7 @@ function main(FB) {
 			renderer.rerender();
 		},
 		setWebglGraphcis = function(graphics) {
-			graphics.setNodeProgram(Viva.Graph.View.webglCustomNodeProgram());
+			graphics.setNodeProgram(Q_DirectedGraph.Graph.View.webglCustomNodeProgram());
 			graphics.node(function(node) {
 				var sexColor = BOYS_COLOR,
 					sex = node.data.sex;
@@ -738,15 +720,15 @@ function main(FB) {
 						sexColor = IT_COLOR;
 					}
 				}
-				var img = Viva.Graph.View.webglSquare(24, sexColor);
+				var img = Q_DirectedGraph.Graph.View.webglSquare(55, sexColor);
 				return img;
 			})
 				.link(function(link) {
-				var line = Viva.Graph.View.webglLine(0xb3b3b3ff);
+				var line = Q_DirectedGraph.Graph.View.webglLine(0xb3b3b3ff);
 				line.oldColor = 0xb3b3b3ff;
 				return line;
 			});
-			var events = Viva.Graph.webglInputEvents(graphics, graph),
+			var events = Q_DirectedGraph.Graph.webglInputEvents(graphics, graph),
 				lastHovered = null,
 				colorLinks = function(node, color) {
 					if (node && node.id) {
@@ -779,32 +761,34 @@ function main(FB) {
 		renderLinks = true,
 		highlightNode = function(node) {
 			if (isWebgl) {
-				node.ui.size = 100;
+				node.ui.size = 500;
 			}
 		},
 		svgLayoutSettings = {
-			springLength: 10,
-			springCoeff: 0.0001,
+			springLength: 300,
+			springCoeff: 0.00003,
 			dragCoeff: 0.0005,
-			gravity: -100
+			gravity: -1000,
+			theta: 0.5
 		},
 		webglLayoutSettings = {
-			springLength: 10,
-			springCoeff: 0.0001,
+			springLength: 300,
+			springCoeff: 0.00003,
 			dragCoeff: 0.0005,
-			gravity: -100
+			gravity: -1000,
+			theta: 0.5
 		},
 		isWebgl = graphics.isSupported(),
-		layout = Viva.Graph.Layout.forceDirected(graph, isWebgl ? webglLayoutSettings : svgLayoutSettings);
+		layout = Q_DirectedGraph.Graph.Layout.forceDirected(graph, isWebgl ? webglLayoutSettings : svgLayoutSettings);
 	if (isWebgl) {
 		setWebglGraphcis(graphics);
 	} else {
-		graphics = Viva.Graph.View.svgGraphics();
+		graphics = Q_DirectedGraph.Graph.View.svgGraphics();
 		$('.no_webgl').show();
-		renderLinks = false;
+		renderLinks = true;
 		setSvgGraphics(graphics);
 	}
-	var renderer = Viva.Graph.View.renderer(graph, {
+	var renderer = Q_DirectedGraph.Graph.View.renderer(graph, {
 		container: document.getElementById('visualization'),
 		graphics: graphics,
 		layout: layout,
@@ -830,7 +814,7 @@ function main(FB) {
 				highlightNode(node);
 				lastFoundPerson = node;
 			} else {
-				node.ui.size = 24;
+				node.ui.size = 50;
 			}
 		});
 		if (lastFoundPerson) {

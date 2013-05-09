@@ -6,8 +6,8 @@ require.config({
 		'sammy': 'javascripts/thirdparty/sammy/lib/sammy',
 		'sammy.mustache': 'javascripts/thirdparty/sammy/lib/plugins/sammy.mustache',
 		'io': 'socket.io/socket.io',
-		'quarkdg': 'javascripts/quarkDG',
-		'Viva': 'javascripts/viva.graph'
+		'QDG': 'javascripts/QuarkDG',
+		'Q_DirectedGraph': 'javascripts/Q_DirectedGraph'
 	},
 	shim: {
 		'sammy': {
@@ -18,17 +18,17 @@ require.config({
 			deps: ['jquery', 'sammy', 'mustache'],
 			exports: 'Sammy.Mustache'
 		},
-		'Viva': {
+		'Q_DirectedGraph': {
 			deps: ['jquery'],
-			exports: 'Viva'
+			exports: 'Q_DirectedGraph'
 		},
-		'quarkdg': {
-			deps: ['jquery', 'Viva'],
-			exports: 'QuarkDG'
+		'QDG': {
+			deps: ['jquery', 'Q_DirectedGraph'],
+			exports: 'QDG'
 		}
 	}
 });
-define(['jquery', 'moment', 'io', 'mustache', 'sammy', 'Viva', 'quarkdg', 'sammy.mustache'], function($, Moment, io, Mustache, Sammy, Quark) {
+define(['jquery', 'moment', 'io', 'mustache', 'sammy', 'Q_DirectedGraph', 'QDG', 'sammy.mustache'], function($, Moment, io, Mustache, Sammy, Quark) {
 	//	internal app instance for exporting vars out of namespace
 	var _app = Object;
 	//	do facebook login
