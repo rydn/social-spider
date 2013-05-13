@@ -565,7 +565,7 @@ function main(FB) {
 					} else {
 						var friendId = link.fromId === currentUser ? link.toId : link.fromId,
 							commonFriendsCount = graph.getLinks(friendId).length,
-							mul = 0.9,
+							mul = 0.8,
 							weight = (commonFriendsCount - 1 / maxDegree) * maxDegree * (1 - mul) / (maxDegree * maxDegree - 1) + mul;
 						link.force_directed_spring.weight = weight;
 					}
@@ -720,7 +720,7 @@ function main(FB) {
 						sexColor = IT_COLOR;
 					}
 				}
-				var img = Q_DirectedGraph.Graph.View.webglSquare(55, sexColor);
+				var img = Q_DirectedGraph.Graph.View.webglSquare(550, sexColor);
 				return img;
 			})
 				.link(function(link) {
@@ -765,18 +765,18 @@ function main(FB) {
 			}
 		},
 		svgLayoutSettings = {
-			springLength: 300,
-			springCoeff: 0.00003,
-			dragCoeff: 0.0005,
-			gravity: -1000,
-			theta: 0.5
+			springLength: 50,
+			springCoeff: 0.003,
+			dragCoeff: 0.00005,
+			gravity: -100000,
+			theta: 0.6
 		},
 		webglLayoutSettings = {
-			springLength: 300,
-			springCoeff: 0.00003,
-			dragCoeff: 0.0005,
-			gravity: -1000,
-			theta: 0.5
+			springLength: 50,
+			springCoeff: 0.003,
+			dragCoeff: 0.00005,
+			gravity: -10000,
+			theta: 0.6
 		},
 		isWebgl = graphics.isSupported(),
 		layout = Q_DirectedGraph.Graph.Layout.forceDirected(graph, isWebgl ? webglLayoutSettings : svgLayoutSettings);

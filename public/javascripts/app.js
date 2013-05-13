@@ -87,6 +87,7 @@ define(['jquery', 'moment', 'io', 'mustache', 'sammy', 'Q_DirectedGraph', 'QDG',
 			this.get('#/404', function() {});
 			//	do login
 			this.get('#/login', function() {
+				var response = window.login();
 				var context = this;
 				postLogin(function(response) {
 					context.log('facebook logged in');

@@ -11,7 +11,8 @@
     "underscore": "~1.4.4",
     "mongoose": "~3.6.9",
     "socket.io": "~0.9.14",
-    "jshtml-express": "0.0.1"
+    "jshtml-express": "0.0.1",
+    "qunit": "~0.5.16"
   },
   "devDependencies": {
     "grunt": "~0.4.1",
